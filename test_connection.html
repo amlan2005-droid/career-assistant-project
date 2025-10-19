@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Connection Test</title>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <div id="status">Testing connection...</div>
+    <button onclick="testConnection()">Test Connection</button>
+    
+    <script>
+        async function testConnection() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/');
+                const data = await response.json();
+                statusDiv.textContent = `Success: ${data.message}`;
+                statusDiv.style.color = 'green';
+            } catch (error) {
+                statusDiv.textContent = `Error: ${error.message}`;
+                statusDiv.style.color = 'red';
+                console.error('Connection failed:', error);
+            }
+        }
+        
+        // Test on page load
+        testConnection();
+    </script>
+</body>
+</html>
