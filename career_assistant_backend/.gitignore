@@ -91,3 +91,4 @@ logs/
 temp/
 tmp/
 *.tmp
+"*.zip" 
