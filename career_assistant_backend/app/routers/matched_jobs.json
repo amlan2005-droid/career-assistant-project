@@ -1,0 +1,26 @@
+{
+    "matched_jobs": [
+        {
+            "title": "Software Engineer",
+            "company": "Google",
+            "matched_skills": [
+                "SQL",
+                "Python"
+            ]
+        },
+        {
+            "title": "Backend Developer",
+            "company": "Startup",
+            "matched_skills": [
+                "Docker"
+            ]
+        },
+        {
+            "title": "Data Analyst",
+            "company": "Analytics Inc",
+            "matched_skills": [
+                "Python"
+            ]
+        }
+    ]
+}

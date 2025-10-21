@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+spacy
+python-multipart
+jinja2
+scikit-learn
+pandas
+numpy
+python-docx
+PyMuPDF  # for PDFs
+passlib
+
