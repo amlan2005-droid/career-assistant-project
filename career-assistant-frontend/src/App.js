@@ -4,10 +4,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
-import Jobs from './pages/job';
-import InterviewPrep from './pages/InterviewPrep';
+import Jobs from './pages/jobs';
+import InterviewSetup from './pages/InterviewSetupPage';
+import InterviewSession from './pages/InterviewSession';
 import OnboardingForm from './components/OnboardingForm';
-import Chatbot from './pages/Chatbot';
+import Chatbot from './components/Chatbot';
 
 import Login from './pages/login';
 import Register from './pages/Register';
@@ -23,7 +24,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/jobs" element={<Jobs />} />
-            <Route path="/interview-prep" element={<InterviewPrep />} />
+            <Route path="/interview-prep" element={<InterviewSetup />} />
+            <Route path="/interview/:sessionId" element={<InterviewSession />} />
             <Route path="/onboarding" element={<OnboardingForm />} />
             <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/resume-upload" element={<ResumeUpload />} />

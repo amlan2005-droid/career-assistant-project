@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
 import Home from "./pages/Home";
-import Jobs from './pages/job';
+import Jobs from './pages/jobs';
 import InterviewPrep from './pages/InterviewPrep';
 import OnboardingForm from './components/OnboardingForm';
-import Chatbot from './pages/Chatbot';
+import Chatbot from './components/Chatbot';
 import Login from "./pages/login";
 import Register from "./pages/Register";
 import ResumeUpload from './pages/ResumeUpload';

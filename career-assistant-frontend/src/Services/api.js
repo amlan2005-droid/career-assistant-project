@@ -1,119 +1,124 @@
 import axios from "axios";
 
-// Determine API base URL
-const isLocalhost = typeof window !== "undefined" && /localhost|127\.0\.0\.1|\[::1\]/.test(window.location.hostname);
-const envApi = process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.trim();
-const fallbackProd = typeof window !== "undefined" ? window.location.origin : "";
-const baseURL = isLocalhost ? (envApi || "http://localhost:3000") : (envApi || fallbackProd);
+/* =========================
+   AXIOS INSTANCE
+========================= */
 
-const API = axios.create({
-  baseURL,
+const api = axios.create({
+  baseURL: "http://127.0.0.1:8000",
 });
 
-// Request interceptor for API calls
-API.interceptors.request.use(
+/* =========================
+   AUTH INTERCEPTOR
+========================= */
+
+api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
     if (token) {
-      config.headers["Authorization"] = "Bearer " + token;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// --- LOGIN ---
+export default api;
+
+/* =========================
+   AUTH APIs
+========================= */
+
 export const loginUser = async (formData) => {
-  try {
-    const res = await API.post("/auth/login", formData);
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || "Login failed";
-  }
+  const res = await api.post("/auth/login", formData);
+  return res.data;
 };
 
-// --- REGISTER ---
 export const registerUser = async (formData) => {
-  try {
-    const res = await API.post("/auth/register", formData);
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || "Registration failed";
-  }
+  const res = await api.post("/auth/register", formData);
+  return res.data;
 };
 
-// --- JOBS: Get available jobs ---
+/* =========================
+   JOB APIs
+========================= */
+
 export const getAvailableJobs = async () => {
-  try {
-    const res = await API.get("/jobs/available");
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || "Failed to fetch jobs";
-  }
+  const res = await api.get("/jobs/available");
+  return res.data;
 };
 
-// --- JOBS: Search jobs (POST JSON payload) ---
 export const searchJobs = async (query) => {
-  try {
-    const res = await API.post("/jobs/search", { query });
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || "Job search failed";
-  }
+  const res = await api.post("/jobs/search", {
+    query,          // ✅ backend expects "query"
+    role: "user",   // ✅ FIX for 422 (missing role)
+  });
+  return res.data;
 };
 
-// --- PING BACKEND ---
-export const pingBackend = async () => {
-  try {
-    const res = await API.get("/ping");
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || "Backend not reachable";
-  }
+/* =========================
+   RESUME APIs (FIXED ✅)
+========================= */
+
+/**
+ * Upload & analyze resume
+ * Backend expects: file: UploadFile = File(...)
+ */
+export const uploadResume = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file); // ✅ MUST be "file"
+
+  const res = await api.post("/resume/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return res.data;
 };
 
-// --- RESUME: Upload resume file ---
-export const uploadResume = async (formData) => {
-  try {
-    const res = await API.post("/resume/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || "Resume upload failed";
-  }
-};
+/* =========================
+   CHATBOT APIs (FIXED ✅)
+========================= */
 
-// --- CHATBOT: Create new session ---
+/**
+ * Create new chatbot session
+ * POST /chatbot/session/new
+ */
 export const createChatSession = async () => {
-  try {
-    const res = await API.post("/chatbot/session/new");
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || "Failed to create chat session";
-  }
+  const res = await api.post("/chatbot/session/new");
+  return res.data; // { session_id }
 };
 
-// --- CHATBOT: Send message with session ---
-export const sendChatbotMessage = async (message, sessionId = null) => {
-  try {
-    const payload = { message };
-    if (sessionId) payload.session_id = sessionId;
-    const res = await API.post("/chatbot/message", payload);
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || "Chatbot request failed";
-  }
+/**
+ * Send message to chatbot
+ * POST /chatbot/session/{session_id}/query
+ */
+export const sendChatbotMessage = async (query, sessionId) => {
+  const res = await api.post(
+    `/chatbot/session/${sessionId}/query`,
+    {
+      query,
+      role: "user", // ✅ REQUIRED by backend schema
+    }
+  );
+  return res.data; // { reply }
 };
 
-// --- CHATBOT: Get session summary ---
-export const getChatSessionSummary = async (sessionId) => {
-  try {
-    const res = await API.get(`/chatbot/session/${sessionId}/summary`);
-    return res.data;
-  } catch (err) {
-    throw err.response?.data || "Failed to get session summary";
-  }
+/* =========================
+   INTERVIEW APIs
+========================= */
+
+export const startInterview = async (data) => {
+  const res = await api.post("/interview/start", data);
+  return res.data;
+};
+
+/* =========================
+   UTILS
+========================= */
+
+export const pingBackend = async () => {
+  const res = await api.get("/ping");
+  return res.data;
 };

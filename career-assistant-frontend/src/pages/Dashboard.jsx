@@ -74,14 +74,14 @@ export default function Dashboard() {
                 Last checked: {lastChecked}
               </span>
             )}
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Refresh
             </button>
-            <button 
-              onClick={testBackendConnection} 
+            <button
+              onClick={testBackendConnection}
               className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
             >
               Test Connection
@@ -109,18 +109,17 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={testBackendConnection}
-              className={`px-3 py-2 rounded text-sm font-medium ${
-                isLoading 
-                  ? 'bg-yellow-500 text-white cursor-not-allowed' 
-                  : 'bg-blue-500 text-white hover:bg-blue-600'
-              }`}
+              className={`px-3 py-2 rounded text-sm font-medium ${isLoading
+                ? 'bg-yellow-500 text-white cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
               disabled={isLoading}
             >
               {isLoading ? 'Testing...' : 'Test Connection'}
             </button>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="px-3 py-2 bg-gray-500 text-white rounded text-sm font-medium hover:bg-gray-600"
             >
@@ -137,7 +136,7 @@ export default function Dashboard() {
             <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
               <Briefcase size={24} />
             </div>
-            <div> 
+            <div>
               <h3 className="text-lg font-semibold">Jobs Applied</h3>
               <p className="text-2xl font-bold">12</p>
             </div>
@@ -187,8 +186,8 @@ export default function Dashboard() {
         <div className="bg-white p-6 rounded-2xl shadow">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">Latest Job Opportunities</h2>
-            <Link 
-              to="/jobs" 
+            <Link
+              to="/jobs"
               className="text-blue-600 hover:text-blue-700 font-medium text-sm"
             >
               View All Jobs →
@@ -215,8 +214,8 @@ export default function Dashboard() {
         <div className="bg-white p-6 rounded-2xl shadow">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">AI Career Assistant</h2>
-            <Link 
-              to="/chatbot" 
+            <Link
+              to="/chatbot"
               className="text-blue-600 hover:text-blue-700 font-medium text-sm"
             >
               Open Chat →
@@ -236,7 +235,7 @@ export default function Dashboard() {
                 <h3 className="font-semibold text-gray-800">Chat with AI Assistant</h3>
                 <p className="text-sm text-gray-600">Ask about jobs, skills, companies, and career advice</p>
               </div>
-              <Link 
+              <Link
                 to="/chatbot"
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
               >
@@ -251,10 +250,10 @@ export default function Dashboard() {
       <div className="bg-white p-6 rounded-2xl shadow">
         <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
         <ul className="space-y-3 text-gray-700">
-          <li>✅ Applied for <strong>Frontend Developer</strong> at Google</li>
-          <li>📄 Uploaded a new resume</li>
-          <li>💬 Practiced mock interview questions</li>
-          <li>🔎 Searched jobs related to <strong>React.js</strong></li>
+          <li>1. Applied for <strong>Frontend Developer</strong> at Wipro</li>
+          <li>2. Uploaded a new resume</li>
+          <li>3. Practiced mock interview questions</li>
+          <li>4. Searched jobs related to <strong>React.js</strong></li>
         </ul>
       </div>
     </div>
