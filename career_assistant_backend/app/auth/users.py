@@ -7,6 +7,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def get_user_by_username(db, username: str):
     return db.query(User).filter(User.username == username).first()
 
+def get_user_by_id(db, user_id: int):
+    return db.query(User).filter(User.id == user_id).first()
+
 def create_user(db, username: str, password: str):
     hashed = pwd_context.hash(password)
     new_user = User(username=username, hashed_password=hashed)

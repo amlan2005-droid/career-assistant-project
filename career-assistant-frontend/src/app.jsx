@@ -15,8 +15,8 @@ function App() {
   useEffect(() => {
     fetch("http://127.0.0.1:8000/ping")
       .then((res) => res.json())
-      .then((data) => console.log("✅ Backend says:", data))
-      .catch((err) => console.error("❌ API Error:", err));
+      .then((data) => console.log(" Backend says:", data))
+      .catch((err) => console.error("API Error:", err));
   }, []);
 
   return (

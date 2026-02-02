@@ -1,0 +1,13 @@
+﻿--- Debugging Chat Flow ---
+Session: 8567c7be-d5a1-40ef-a94d-f59a7b0b2e8b
+Message: Hello, what skills are in my resume?
+
+Response: I do not have access to your specific resume text or uploaded documents yet.
+
+The document I reviewed provides general information about software engineering careers. It notes that common skills required in this field include:
+
+*   Python
+*   JavaScript
+*   Problem solving
+
+To provide an accurate list of the skills on your resume, please upload or paste the content of your resume.

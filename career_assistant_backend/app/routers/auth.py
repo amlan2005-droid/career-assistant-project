@@ -8,17 +8,12 @@ from typing import cast
 from app.database.db import get_db
 from app.models.user import User
 from app.schemas.auth_schemas import UserCreate, UserLogin, TokenResponse
+from app.auth.auth_handler import create_access_token
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 # Password hashing setup
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# JWT settings
-SECRET_KEY = "your_secret_key_here"  # ⚠️ Replace this with a strong env-based key
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
 
 # 🔒 Password utility functions
 def hash_password(password: str) -> str:
@@ -27,14 +22,6 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
-
-
-# 🔑 Token generator
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 # 🧍‍♂️ Register user

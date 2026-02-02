@@ -1,0 +1,4 @@
+This is a sample document to verify the RAG system.
+It contains information about software engineering careers.
+Software engineers build applications and systems.
+Skills required include Python, JavaScript, and problem solving.

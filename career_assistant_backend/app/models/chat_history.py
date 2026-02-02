@@ -10,3 +10,9 @@ class ChatHistory(Base):
     role = Column(String)  # "user" or "assistant"
     message = Column(Text)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    tokens = Column(Integer, default=0)
+
+    @staticmethod
+    def create_session(db):
+        import uuid
+        return str(uuid.uuid4())

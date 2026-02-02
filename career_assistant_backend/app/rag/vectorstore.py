@@ -1,34 +1,52 @@
 import os
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_chroma import Chroma
 
-VECTORSTORE_PATH = "vectorstore_index"
+DB_PATH = "app/rag/db_v2"
 
-def build_vectorstore_from_text(text: str):
-    # 1. Split text into chunks
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200
+
+# -----------------------------
+# Text Splitter
+# -----------------------------
+def get_text_splitter():
+    return RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=100,
+        separators=["\n\n", "\n", ".", " ", ""],
     )
-    chunks = text_splitter.split_text(text)
 
-    # 2. Create embeddings
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
-    # 3. Build vectorstore
-    vectorstore = FAISS.from_texts(chunks, embedding=embeddings)
-
-    # 4. Save locally
-    vectorstore.save_local(VECTORSTORE_PATH)
-
-    return vectorstore
-
-def get_vectorstore():
-    """Load vectorstore if it exists, otherwise build a new one."""
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-
-    if os.path.exists(VECTORSTORE_PATH):
-        return FAISS.load_local(VECTORSTORE_PATH, embeddings, allow_dangerous_deserialization=True)
+# -----------------------------
+# Embeddings Factory
+# -----------------------------
+def get_embeddings():
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if api_key:
+        return GoogleGenerativeAIEmbeddings(
+            model="models/gemini-embedding-001",
+            google_api_key=api_key
+        )
     else:
-        raise ValueError("Vectorstore not found. Please build it first.")
+        return OpenAIEmbeddings(
+            model="text-embedding-3-small"
+        )
+
+
+# -----------------------------
+# Load Vectorstore
+# -----------------------------
+def get_vectorstore():
+    if not os.path.exists(DB_PATH):
+        raise ValueError(
+            f"Vectorstore not found at {DB_PATH}. "
+            "Please run `python -m app.rag.ingest` first."
+        )
+
+    embeddings = get_embeddings()
+
+    return Chroma(
+        persist_directory=DB_PATH,
+        embedding_function=embeddings
+    )

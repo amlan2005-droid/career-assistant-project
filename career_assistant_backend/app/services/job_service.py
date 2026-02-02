@@ -42,13 +42,13 @@ def search_jobs_adzuna(role: str, location: str = "India", results_per_page: int
                 "url": j.get("redirect_url", "#")
             })
 
-        print(f"✅ Parsed {len(jobs)} jobs")
+        print(f" Parsed {len(jobs)} jobs")
         return jobs
 
     except requests.exceptions.RequestException as e:
-        print("❌ Request error:", str(e))
+        print(" Request error:", str(e))
         return []
 
     except Exception as e:
-        print("❌ Unexpected error:", str(e))
+        print(" Unexpected error:", str(e))
         return []

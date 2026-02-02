@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey
 from app.database.db import Base
 
 class JobMatchResult(Base):
@@ -6,4 +6,5 @@ class JobMatchResult(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"))
-    matched_jobs = Column(String)
+    job_id = Column(Integer, ForeignKey("jobs.id"))
+    match_score = Column(Integer)  # 0–100

@@ -1,81 +1,84 @@
-import os
-import shutil
-import json
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlalchemy.orm import Session
+from app.utils.resume_text_extractor import extract_text_from_resume
+from app.services.resume_analysis_service import analyze_resume_text
+from app.services.resume_profile_service import save_or_update_resume_profile, save_or_update_resume_analysis
+from app.services.resume_analysis_service import infer_domains_from_skills
+from app.auth.dependencies import get_db, get_current_user
+from app.models.resume_insights import ResumeInsights
 
-from app.database.db import get_db
-from app.models.resume import Resume
-from app.models.job_match import JobMatchResult
-from app.services.resume_parser import parse_resume
-from app.services.skill_extractor import extract_skills
-from app.services.job_matcher import get_matched_jobs
-
-router = APIRouter()
-UPLOAD_DIR = "temp_resumes"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+router = APIRouter(prefix="/resume", tags=["Resume"])
 
 
-# Dependency to get DB session
-def get_db_session():
-    db = next(get_db())
-    try:
-        yield db
-    finally:
-        db.close()
+@router.post("/upload")
+async def upload_resume(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Upload a PDF or DOCX resume, extract text (OCR if scanned), and analyze it.
+    """
+    # Read file bytes
+    file_bytes = await file.read()
 
+    # Extract text from resume
+    text, is_scanned = extract_text_from_resume(file_bytes, file.filename)
 
-@router.post("/analyze/")
-async def analyze_resume(file: UploadFile = File(...), db: Session = Depends(get_db_session)):
-    if not file.filename:
-        raise HTTPException(status_code=400, detail="Invalid file")
+    # If no meaningful text found
+    if len(text.strip()) < 50:
+        raise HTTPException(
+            status_code=422,
+            detail="Unable to extract meaningful text. Resume may be scanned or image-only."
+        )
 
-    # Temporary file path
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    # Analyze text (works for both scanned and normal)
+    analysis = analyze_resume_text(text)
 
-    try:
-        # Save the uploaded file
-        with open(file_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
+    # Save to ResumeProfile table
+    save_or_update_resume_profile(
+        db=db,
+        user_id=current_user.id,
+        analysis=analysis
+    )
+    
+    # Save to ResumeAnalysis table with inferred domains
+    save_or_update_resume_analysis(
+        db=db,
+        user_id=current_user.id,
+        analysis=analysis
+    )
+    
+    # ✅ STEP 3: Save domains to ResumeInsights table using new function
+    skills = analysis.get("skills", [])
+    domains = infer_domains_from_skills(skills)
+    
+    # Check if ResumeInsights already exists for this user
+    existing_insights = db.query(ResumeInsights).filter(
+        ResumeInsights.user_id == current_user.id
+    ).first()
+    
+    if existing_insights:
+        # Update existing record
+        existing_insights.domains = ",".join(domains)
+        existing_insights.skills = ",".join(skills)
+    else:
+        # Create new record
+        resume_insight = ResumeInsights(
+            user_id=current_user.id,
+            domains=",".join(domains),
+            skills=",".join(skills)
+        )
+        db.add(resume_insight)
+    
+    db.commit()
 
-        # Parse resume
-        parsed = parse_resume(file_path)
-        text = parsed.get("text", "")
-        entities = parsed.get("entities", [])
+    message = "Resume analyzed successfully."
+    if is_scanned:
+        message = "Resume extracted via OCR (scanned PDF)."
 
-        # Extract skills
-        skill_pool = ["Python", "Django", "FastAPI", "SQL", "Java", "React", "Pandas", "Docker"]
-        extracted_skills = extract_skills(text, skill_pool)
-
-        # Example job listings (replace with DB later)
-        job_listings = [
-            {"title": "Software Engineer", "company": "Google", "skills": ["Python", "Django", "SQL"]},
-            {"title": "Backend Developer", "company": "Startup", "skills": ["FastAPI", "PostgreSQL", "Docker"]},
-            {"title": "Data Analyst", "company": "Analytics Inc", "skills": ["Python", "Pandas", "Excel"]},
-        ]
-
-        matched = get_matched_jobs(extracted_skills, job_listings)
-
-        # Save resume in DB
-        resume_record = Resume(text=text, entities=json.dumps(entities), user_id=None)
-        db.add(resume_record)
-        db.commit()
-        db.refresh(resume_record)
-
-        # Save matched jobs
-        match_record = JobMatchResult(resume_id=resume_record.id, matched_jobs=json.dumps(matched))
-        db.add(match_record)
-        db.commit()
-
-        # Return response
-        return {
-            "message": "Resume parsed and saved successfully",
-            "resume_id": resume_record.id,
-            "extracted_skills": extracted_skills,
-            "matched_jobs": matched
-        }
-
-    finally:
-        # Cleanup temp file
-        if os.path.exists(file_path):
-            os.remove(file_path)
+    return {
+        "message": message,
+        "is_scanned": is_scanned,
+        "analysis": analysis
+    }

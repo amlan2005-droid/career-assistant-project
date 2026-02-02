@@ -1,48 +1,58 @@
 from fastapi import FastAPI
-from dotenv import load_dotenv
-from app.routers import auth, resume, job_match, interview, query as query_router, chat, job
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-# Load environment variables from .env at startup
-load_dotenv()
+from app.routers import (
+    auth,
+    resume,
+    job_match,
+    interview,
+    chatbot,
+)
+from app.routers.jobs import router as jobs_router
 
-app = FastAPI(title="Career Assistant API")
+from app.database.db import Base, engine
+from app.models.user import User
+from app.models.resume import Resume
+from app.models.job_match import JobMatchResult
+from app.models.chat_history import ChatHistory
+from app.models.resume_analysis import ResumeAnalysis
+from app.models.resume_insights import ResumeInsights
 
-# Configure CORS
+from app.utils.limiter import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
+app = FastAPI(
+    title="Career Assistant API",
+    version="1.0.0",
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-app.include_router(resume.router, prefix="/resume")
-app.include_router(job_match.router, prefix="/jobs",tags=["Job"])
-app.include_router(interview.router, prefix="/interview")
-app.include_router(query_router.router, prefix="/query", tags=["Query"])
-app.include_router(chat.router, prefix="/chat", tags=["Chat"])
-app.include_router(job.router, prefix="/job", tags=["job"])
-
 @app.get("/")
-def root():
-    return {"message": "Career Assistant Backend is live!"}
+async def root():
+    return {"status": "Career Assistant API running"}
 
 @app.get("/ping")
-def ping():
-    return {"status": "ok", "message": "pong"}
+async def ping():
+    return {"status": "ok"}
 
-@app.get("/health")
-def health_check():
-    return {
-        "status": "healthy",
-        "message": "Career Assistant API is running",
-        "version": "1.0.0"
-    }
+#  ROUTERS
+app.include_router(auth.router)
+app.include_router(resume.router)
+app.include_router(job_match.router, prefix="/jobs", tags=["Job Matching"])
+app.include_router(interview.router, prefix="/interview", tags=["Interview"])
+app.include_router(chatbot.router)
+app.include_router(jobs_router)
 
-@app.get("/test")
-def test_endpoint():
-    return {"message": "Test endpoint is working!"}
-
+Base.metadata.create_all(bind=engine)

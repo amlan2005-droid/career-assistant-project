@@ -1,7 +1,7 @@
 # app/models/resume.py
 from __future__ import annotations
 from sqlalchemy import Column, Integer, String, ForeignKey
-from app.database.db import Base  # ✅ import Base from your db module
+from app.database.db import Base
 
 class Resume(Base):
     __tablename__ = "resumes"
