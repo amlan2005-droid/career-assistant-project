@@ -1,3 +1,4 @@
+print("\n" + "="*50 + "\n--- SERVER RELOADING ---\n" + "="*50 + "\n")
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,7 @@ from app.routers import (
     job_match,
     interview,
     chatbot,
+    cheating,
 )
 from app.routers.jobs import router as jobs_router
 
@@ -26,6 +28,7 @@ from slowapi.errors import RateLimitExceeded
 app = FastAPI(
     title="Career Assistant API",
     version="1.0.0",
+    debug=True,
 )
 
 app.state.limiter = limiter
@@ -51,8 +54,9 @@ async def ping():
 app.include_router(auth.router)
 app.include_router(resume.router)
 app.include_router(job_match.router, prefix="/jobs", tags=["Job Matching"])
-app.include_router(interview.router, prefix="/interview", tags=["Interview"])
+app.include_router(interview.router)
 app.include_router(chatbot.router)
+app.include_router(cheating.router)
 app.include_router(jobs_router)
 
 Base.metadata.create_all(bind=engine)

@@ -13,6 +13,7 @@ def extract_text_from_resume(file_bytes: bytes, filename: str):
     For PDFs: First tries direct text extraction, falls back to OCR if needed.
     Returns: (extracted_text, is_scanned_flag)
     """
+    text = ""
     is_scanned = False
     
     # Handle TXT (for debugging)

@@ -1,89 +1,36 @@
 import json
 import os
-from google import genai
 from typing import Dict
 from dotenv import load_dotenv
+from app.services.gemini_client import ask_gemini
 
 # Load environment variables
 load_dotenv()
 
 # ----------------------------------------------------
-# Gemini Configuration
+# SYSTEM PROMPTS
 # ----------------------------------------------------
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
-# ----------------------------------------------------
-# SYSTEM PROMPT (STRICT CONTROL)
-# ----------------------------------------------------
-SYSTEM_PROMPT = """
+REASONING_PROMPT = """
 You are a senior technical recruiter and resume evaluator.
 
+Your task is to provide HIGHLY SPECIFIC feedback based on the provided resume data.
+Avoid generic advice like "add more skills" or "use metrics". Instead, reference the actual skills and experience provided.
+
 You MUST follow these rules strictly:
-- Reason ONLY from the provided structured data
-- Do NOT invent skills, experience, or achievements
+- Reason ONLY from the provided structured data (skills, experience, projects, etc.)
 - Do NOT repeat the same point in different wording
-- Avoid generic advice
-- Each point must be concise and specific
+- Each point must be concise, specific, and actionable
 - Maximum 3 strengths, 3 weaknesses, 3 suggestions
-- Suggestions must be actionable and measurable
+- Suggestions must be directly tied to the technologies and experience level listed
 
 Return ONLY valid JSON with this format:
 {
-  "strengths": [],
-  "weaknesses": [],
-  "suggestions": []
+  "strengths": ["specific strength 1", ...],
+  "weaknesses": ["specific weakness 1", ...],
+  "suggestions": ["specific suggestion 1", ...]
 }
 """
 
-# ----------------------------------------------------
-# PUBLIC FUNCTION
-# ----------------------------------------------------
-def generate_reasoned_feedback(resume_data: Dict) -> Dict:
-    """
-    Hybrid reasoning layer.
-    Uses Gemini ONLY to reason over structured resume data.
-    """
-
-    # Minimal input (prevents hallucination)
-    reasoning_input = {
-        "resume_score": resume_data.get("resume_score"),
-        "adi_score": resume_data.get("achievement_density_index", {}).get("adi_score"),
-        "skills_count": len(resume_data.get("skills", [])),
-        "projects_count": resume_data.get("projects_count", 0),
-        "experience_level": resume_data.get("experience_level"),
-        "metrics_count": resume_data.get("achievement_density_index", {}).get("metrics_found"),
-        "rule_strengths": resume_data.get("strengths", []),
-        "rule_weaknesses": resume_data.get("weaknesses", [])
-    }
-
-    try:
-        response = client.models.generate_content(
-            model="gemini-1.5-pro",
-            contents=[
-                SYSTEM_PROMPT,
-                f"Resume data:\n{json.dumps(reasoning_input, indent=2)}"
-            ],
-            config={
-                "temperature": 0.25,   # low hallucination
-                "top_p": 0.9,
-                "max_output_tokens": 400
-            }
-        )
-
-        return json.loads(response.text)
-
-    except Exception as e:
-        # Safe fallback (system never breaks)
-        return {
-            "strengths": [],
-            "weaknesses": [],
-            "suggestions": []
-        }
-
-
-# ----------------------------------------------------
-# AI-POWERED SKILL EXTRACTION
-# ----------------------------------------------------
 SKILL_EXTRACTION_PROMPT = """
 You are an expert technical recruiter analyzing a resume.
 
@@ -95,7 +42,6 @@ Rules:
 - Include tools (Docker, Git, AWS, etc.)
 - Include databases (MySQL, MongoDB, PostgreSQL, etc.)
 - Include methodologies (Agile, Scrum, etc.)
-- Be comprehensive but accurate
 - Only extract skills actually mentioned in the resume
 - Return skills as a simple list
 
@@ -105,35 +51,81 @@ Return ONLY valid JSON with this format:
 }
 """
 
+# ----------------------------------------------------
+# PUBLIC FUNCTIONS
+# ----------------------------------------------------
+def generate_reasoned_feedback(resume_data: Dict) -> Dict:
+    """
+    Hybrid reasoning layer.
+    Uses Gemini (via gemini_client) to reason over structured resume data.
+    """
+    # Comprehensive input for better reasoning
+    reasoning_input = {
+        "score": resume_data.get("score"),
+        "experience_level": resume_data.get("experience_level"),
+        "experience_years": resume_data.get("experience_years", 0),
+        "education": resume_data.get("education"),
+        "skills_found": resume_data.get("skills", []),
+        "projects_count": resume_data.get("projects_count", 0),
+        "metrics_found": resume_data.get("achievement_density_index", {}).get("metrics_found", 0),
+        "adi_score": resume_data.get("achievement_density_index", {}).get("adi_score", 0),
+        "rule_based_strengths": resume_data.get("rule_strengths", []),
+        "rule_based_weaknesses": resume_data.get("rule_weaknesses", []),
+        "rule_based_suggestions": resume_data.get("rule_suggestions", [])
+    }
+
+    try:
+        prompt = f"{REASONING_PROMPT}\n\nResume data to evaluate:\n{json.dumps(reasoning_input, indent=2)}\n\nIMPORTANT: Return ONLY the JSON object."
+        
+        response_text = ask_gemini(prompt)
+
+        if not response_text or "ERROR:" in response_text:
+            return {"strengths": [], "weaknesses": [], "suggestions": []}
+
+        # Robust JSON extraction
+        content = response_text.strip()
+        start_idx = content.find('{')
+        end_idx = content.rfind('}')
+        
+        if start_idx != -1 and end_idx != -1:
+            json_str = content[start_idx:end_idx+1]
+            return json.loads(json_str)
+        
+        return {"strengths": [], "weaknesses": [], "suggestions": []}
+
+    except Exception as e:
+        print(f"AI reasoning failed: {e}")
+        return {"strengths": [], "weaknesses": [], "suggestions": []}
+
+
 def extract_skills_with_ai(resume_text: str) -> list[str]:
     """
-    Extract skills from resume text using Gemini AI.
-    Falls back to empty list on error.
+    Extract skills from resume text using Gemini (via gemini_client).
     """
     if not resume_text or len(resume_text.strip()) < 50:
         return []
     
     try:
-        response = client.models.generate_content(
-            model="gemini-1.5-pro",
-            contents=[
-                SKILL_EXTRACTION_PROMPT,
-                f"Resume text:\n{resume_text[:3000]}"  # Limit to first 3000 chars to avoid token limits
-            ],
-            config={
-                "temperature": 0.1,  # Very low for factual extraction
-                "top_p": 0.9,
-                "max_output_tokens": 500
-            }
-        )
+        prompt = f"{SKILL_EXTRACTION_PROMPT}\n\nResume text:\n{resume_text[:3000]}\n\nIMPORTANT: Return ONLY the JSON object."
         
-        result = json.loads(response.text)
-        skills = result.get("skills", [])
+        response_text = ask_gemini(prompt)
+
+        if not response_text or "ERROR:" in response_text:
+            return []
+
+        # Robust JSON extraction
+        content = response_text.strip()
+        start_idx = content.find('{')
+        end_idx = content.rfind('}')
         
-        # Return list of skills (lowercase for consistency)
-        return [skill.strip() for skill in skills if skill.strip()]
+        if start_idx != -1 and end_idx != -1:
+            json_str = content[start_idx:end_idx+1]
+            result = json.loads(json_str)
+            skills = result.get("skills", [])
+            return [skill.strip() for skill in skills if skill.strip()]
+        
+        return []
         
     except Exception as e:
         print(f"AI skill extraction failed: {e}")
-        # Fallback to empty list
         return []

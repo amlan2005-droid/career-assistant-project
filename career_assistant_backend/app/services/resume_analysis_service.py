@@ -1,5 +1,6 @@
 from app.services.resume_parser import extract_features
 from app.services.reasoning_service import generate_reasoned_feedback
+import random
 
 # ---------- SKILL TO DOMAIN MAPPING ----------
 
@@ -141,9 +142,9 @@ def normalize(score, max_score=115):
 def analyze_resume_text(resume_text: str) -> dict:
     features = extract_features(resume_text)
     
-    # 🔍 DEBUG: Print extracted skills to see what's being found
-    print(f"🔍 DEBUG - Extracted skills: {features['skills']}")
-    print(f"🔍 DEBUG - Resume text preview: {resume_text[:200]}...")
+    # DEBUG: Print extracted skills to see what's being found
+    print(f"DEBUG - Extracted skills: {features['skills']}")
+    print(f"DEBUG - Resume text preview: {resume_text[:200]}...")
 
 
     raw_score = (
@@ -197,125 +198,86 @@ def analyze_resume_text(resume_text: str) -> dict:
     strengths = []
     
     # Achievements-based strengths
-    if features["metrics_count"] >= 8:
-        strengths.append(f"Excellent quantified impact with {features['metrics_count']} measurable achievements")
-    elif features["metrics_count"] >= 5:
-        strengths.append(f"Strong use of metrics ({features['metrics_count']} quantified results)")
-    elif features["metrics_count"] >= 3:
-        strengths.append("Good quantified achievements")
+    if features["metrics_count"] >= 5:
+        strengths.append(f"Strong use of metrics ({features['metrics_count']} quantified results found)")
+    elif features["metrics_count"] >= 2:
+        strengths.append("Good start at quantifying professional achievements")
     
     # Skills-based strengths
-    if features["skills_count"] >= 20:
-        strengths.append(f"Comprehensive skillset ({features['skills_count']} skills listed)")
-    elif features["skills_count"] >= 15:
-        strengths.append("Broad technical expertise")
-    elif features["skills_count"] >= 10 and skills_pct > 60:
-        strengths.append("Well-rounded technical skills")
+    if features["skills_count"] >= 12:
+        strengths.append(f"Comprehensive technical toolkit with {features['skills_count']} core skills")
+    elif features["skills_count"] >= 6:
+        strengths.append("Solid foundation in relevant technical competencies")
+    elif features["skills_count"] > 0:
+        main_skill = features["skills"][0].capitalize()
+        strengths.append(f"Clear focus on {main_skill} and related technologies")
     
     # Projects-based strengths
-    if features["projects_count"] >= 5:
-        strengths.append(f"Impressive portfolio ({features['projects_count']} projects)")
-    elif features["projects_count"] >= 3:
-        strengths.append("Solid hands-on project experience")
+    if features["projects_count"] >= 3:
+        strengths.append(f"Active project portfolio with {features['projects_count']} distinct works")
+    elif features["projects_count"] >= 1:
+        strengths.append("Demonstrated hands-on experience through project work")
     
     # Experience-based strengths
-    if features["experience_years"] >= 5:
-        strengths.append(f"Extensive experience ({features['experience_years']}+ years)")
-    elif features["experience_years"] >= 2:
-        strengths.append("Good professional experience")
-    
-    # ADI-based strengths
-    if adi_score >= 8:
-        strengths.append("High achievement density throughout")
+    if features["experience_years"] >= 3:
+        strengths.append(f"Established professional track record ({features['experience_years']} years)")
+    elif features["experience_years"] > 0:
+        strengths.append("Growing industry experience and professional presence")
     
     # Fluff-based strength
     if features["fluff_phrases_count"] <= 2:
-        strengths.append("Concise, professional language")
+        strengths.append("Clean, high-impact professional language")
 
     # ---------- Dynamic Weaknesses ----------
     weaknesses = []
     
-    # Find the weakest area
-    component_scores = {
-        "achievements": achievements_pct,
-        "projects": projects_pct,
-        "skills": skills_pct
-    }
-    weakest = min(component_scores, key=component_scores.get)
-    
     # Achievements weaknesses
     if features["metrics_count"] == 0:
-        weaknesses.append("No quantified achievements - add specific numbers and results")
-    elif features["metrics_count"] <= 2 and weakest == "achievements":
-        weaknesses.append("Limited measurable outcomes - quantify your impact more")
+        weaknesses.append("Lack of quantified impact - use percentages or numbers to show value")
+    elif features["metrics_count"] < 3:
+        weaknesses.append("Limited measurable data - quantify more of your accomplishments")
     
     # Projects weaknesses
     if features["projects_count"] == 0:
-        weaknesses.append("No projects listed - add practical work examples")
-    elif features["projects_count"] == 1:
-        weaknesses.append("Only one project shown - add more to demonstrate breadth")
-    elif features["projects_count"] <= 2 and weakest == "projects":
-        weaknesses.append("Limited project portfolio")
+        weaknesses.append("Missing project section - add real-world applications of your skills")
+    elif features["projects_count"] < 2:
+        weaknesses.append("Single project listed - expand your portfolio to show technical breadth")
     
     # Skills weaknesses
-    if features["skills_count"] < 5:
-        weaknesses.append("Very limited skills listed - expand technical competencies")
-    elif features["skills_count"] < 8 and weakest == "skills":
-        weaknesses.append("Narrow skill range - broaden technical expertise")
+    if features["skills_count"] < 4:
+        weaknesses.append("Narrow technical range - consider listing more tangential skills")
     
     # Fluff weaknesses
-    if features["fluff_phrases_count"] > 8:
-        weaknesses.append(f"Excessive generic phrases ({features['fluff_phrases_count']} found) - be more specific")
-    elif features["fluff_phrases_count"] > 5:
-        weaknesses.append("Too many vague statements - use concrete examples")
-    
-    # ADI weaknesses
-    if adi_score < 2 and features["metrics_count"] > 0:
-        weaknesses.append("Low achievement density - spread metrics throughout resume")
-    
-    # Experience weaknesses (for freshers)
-    if features["experience_years"] < 1 and features["projects_count"] < 3:
-        weaknesses.append("Limited experience - compensate with more projects")
+    if features["fluff_phrases_count"] > 5:
+        weaknesses.append(f"High generic language count ({features['fluff_phrases_count']}) - replace vague terms with action verbs")
 
     # ---------- Dynamic Suggestions ----------
     suggestions = []
     
-    # Prioritize suggestions based on what needs most improvement
-    if achievements_pct < 40:
-        if features["metrics_count"] == 0:
-            suggestions.append("Add numbers to every accomplishment (e.g., 'Increased efficiency by 30%')")
-        else:
-            suggestions.append(f"Add {5 - features['metrics_count']} more quantified achievements")
+    # Personalize suggestions based on missing pieces
+    if features["metrics_count"] < 3:
+        suggestions.append("Apply the STAR method to your bullet points to include clear metrics")
     
-    if projects_pct < 50:
-        if features["projects_count"] < 2:
-            suggestions.append("Add at least 2-3 real-world projects with technical details")
-        else:
-            suggestions.append("Expand project descriptions with tech stack and outcomes")
+    if features["projects_count"] < 2:
+        suggestions.append("Host a personal project on GitHub and include the link on your resume")
     
-    if skills_pct < 50:
-        suggestions.append(f"List {12 - features['skills_count']} more relevant technical skills")
+    if features["skills_count"] < 8:
+        suggestions.append(f"Deepen your expertise in {features['skills'][0] if features['skills'] else 'your core domains'}")
     
-    if features["fluff_phrases_count"] > 4:
-        suggestions.append("Replace generic phrases with specific, measurable contributions")
-    
-    if adi_score < 5 and features["metrics_count"] >= 3:
-        suggestions.append("Better distribute achievements across all experiences")
-    
-    if features["experience_years"] < 1:
-        suggestions.append("Highlight internships, academic projects, and certifications")
-    
-    # Add role-specific suggestions based on experience level
-    if features["experience_years"] >= 3 and features["metrics_count"] < 5:
-        suggestions.append("With your experience, emphasize leadership and measurable impact")
-    
-    # Ensure we have at least some feedback
+    if features["fluff_phrases_count"] > 3:
+        suggestions.append("Scrub generic phrases like 'responsible for' and lead with action verbs")
+
+    # Ensure we have at least some feedback (Diversified fallbacks)
+    fallback_strengths = ["Professional resume layout and structure", "Strong presentation of educational background", "Clear identification of core competencies"]
+    fallback_weaknesses = ["Limited use of industry-standard action verbs", "Missing links to professional portfolio or GitHub", "Resume could be more tightly focused on specific roles"]
+    fallback_suggestions = ["Incorporate more industry keywords into your summary", "Consider a modern template with better readability", "Ensure for every skill listed, you have a matching example in your experience"]
+
     if not strengths:
-        strengths.append("Resume submitted for analysis")
+        strengths.append(random.choice(fallback_strengths))
     if not weaknesses:
-        weaknesses.append("Consider adding more quantified achievements")
+        weaknesses.append(random.choice(fallback_weaknesses))
     if not suggestions:
-        suggestions.append("Focus on highlighting measurable outcomes")
+        suggestions.append(random.choice(fallback_suggestions))
 
     # Calculate skill insights (High/Medium/Low confidence)
     skill_insights = []
@@ -339,18 +301,15 @@ def analyze_resume_text(resume_text: str) -> dict:
 
     # Build structured data for AI reasoning
     resume_data = {
-        "resume_score": resume_score,
-        "score": resume_score,  # Alias for frontend
+        "score": resume_score,
         "experience_level": "Fresher" if features["experience_years"] < 1 else "Experienced",
-        "experience_years": features["experience_years"],  # Alias for frontend
+        "experience_years": features["experience_years"],
         "skills": features["skills"],
-        "skills_found": features["skills"],  # Alias for frontend
-        "skill_insights": skill_insights, # Added for frontend visualization
-        "education": features["education_level"],  # Alias for frontend
+        "education": features["education_level"],
         "projects_count": features["projects_count"],
-        "strengths": strengths[:3],
-        "weaknesses": weaknesses[:3],
-        "suggestions": suggestions[:3],
+        "rule_strengths": strengths[:3],
+        "rule_weaknesses": weaknesses[:3],
+        "rule_suggestions": suggestions[:3],
         "achievement_density_index": {
             "adi_score": adi_score,
             "metrics_found": features["metrics_count"]
@@ -361,13 +320,29 @@ def analyze_resume_text(resume_text: str) -> dict:
     try:
         ai_feedback = generate_reasoned_feedback(resume_data)
         
-        # Use AI feedback if valid, fallback to rule-based if AI fails
-        if ai_feedback and all(key in ai_feedback for key in ["strengths", "weaknesses", "suggestions"]):
-            resume_data["strengths"] = ai_feedback["strengths"][:3] if ai_feedback["strengths"] else strengths[:3]
-            resume_data["weaknesses"] = ai_feedback["weaknesses"][:3] if ai_feedback["weaknesses"] else weaknesses[:3]
-            resume_data["suggestions"] = ai_feedback["suggestions"][:3] if ai_feedback["suggestions"] else suggestions[:3]
+        # Use AI feedback if valid and NOT empty, fallback to rule-based if AI fails or returns empty lists
+        if ai_feedback and any(ai_feedback.get(key) for key in ["strengths", "weaknesses", "suggestions"]):
+            resume_data["strengths"] = ai_feedback.get("strengths") or strengths[:3]
+            resume_data["weaknesses"] = ai_feedback.get("weaknesses") or weaknesses[:3]
+            resume_data["suggestions"] = ai_feedback.get("suggestions") or suggestions[:3]
+            
+            # Ensure we limit to 3 items
+            resume_data["strengths"] = resume_data["strengths"][:3]
+            resume_data["weaknesses"] = resume_data["weaknesses"][:3]
+            resume_data["suggestions"] = resume_data["suggestions"][:3]
+        else:
+            resume_data["strengths"] = strengths[:3]
+            resume_data["weaknesses"] = weaknesses[:3]
+            resume_data["suggestions"] = suggestions[:3]
     except Exception as e:
         # Keep rule-based feedback on any error
-        pass
+        resume_data["strengths"] = strengths[:3]
+        resume_data["weaknesses"] = weaknesses[:3]
+        resume_data["suggestions"] = suggestions[:3]
+
+    # Add frontend-specific fields
+    resume_data["resume_score"] = resume_score
+    resume_data["skills_found"] = features["skills"]
+    resume_data["skill_insights"] = skill_insights
     
     return resume_data

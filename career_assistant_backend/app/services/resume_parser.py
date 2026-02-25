@@ -56,20 +56,35 @@ def extract_features(text: str) -> dict:
     # Keep all skills for internal use, but mark primary ones
     all_skills = list(set(skill_matches))
     
-    # 🔍 DEBUG: Print skill frequencies
-    print(f"🔍 Skill frequencies: {dict(skill_freq)}")
-    print(f"🔍 Primary skills (confidence >= {CONFIDENCE_THRESHOLD}): {primary_skills}")
+    # DEBUG: Print skill frequencies
+    print(f"DEBUG: Skill frequencies: {dict(skill_freq)}")
+    print(f"DEBUG: Primary skills (confidence >= {CONFIDENCE_THRESHOLD}): {primary_skills}")
 
 
-    # projects
+    # projects - check for keyword "project" OR common project section headers
     projects_count = len(re.findall(r"\bproject\b", text_lower))
+    # If explicit keyword count is low, check for bulleted lists under a projects header
+    if projects_count < 2:
+        project_sections = re.findall(r"(?:projects|personal projects|key projects)[:\s]*(.*?)(?:\n\s*\n|\Z)", text_lower, re.DOTALL)
+        for section in project_sections:
+            # Count bullet points as individual projects
+            bullets = re.findall(r"(?:^|\n)\s*[\•\-\*]\s+", section)
+            projects_count = max(projects_count, len(bullets))
 
     # experience years
-    exp_matches = re.findall(r"(\d+)\+?\s+years", text_lower)
-    experience_years = max(map(int, exp_matches)) if exp_matches else 0
+    exp_matches = re.findall(r"(\d+(?:\.\d+)?)\+?\s+years", text_lower)
+    experience_years = max(map(float, exp_matches)) if exp_matches else 0
 
-    # quantified achievements
-    metrics_count = len(re.findall(r"\b\d+%|\b\d+\b", text))
+    # quantified achievements (improved: exclude years, look for %, $, and units)
+    # Exclude 19xx and 20xx years
+    all_numbers = re.findall(r"\b\d+\b%?|\$\d+(?:[kKmM])?|\b\d+(?:\.\d+)?(?:%|k|m|bn)\b", text)
+    metrics = []
+    for n in all_numbers:
+        # Exclude common years (1900-2099)
+        if n.isdigit() and 1900 <= int(n) <= 2099:
+            continue
+        metrics.append(n)
+    metrics_count = len(metrics)
 
     # action verbs
     action_verbs_count = sum(text_lower.count(v) for v in ACTION_VERBS)

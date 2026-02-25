@@ -15,6 +15,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await loginUser(formData);
+      console.log("Login Success - Token received:", res.access_token ? "Yes" : "No");
       localStorage.setItem("authToken", res.access_token); // save token
       navigate("/dashboard"); // redirect
     } catch (err) {

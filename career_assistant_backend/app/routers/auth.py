@@ -27,17 +27,29 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # 🧍‍♂️ Register user
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user.email).first()
-    if existing_user:
+    email = user.email.lower().strip()
+    username = user.username.strip()
+    
+    # 📧 Check email
+    existing_user_email = db.query(User).filter(User.email == email).first()
+    if existing_user_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
+    
+    # 👤 Check username
+    existing_user_name = db.query(User).filter(User.username == username).first()
+    if existing_user_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
 
     hashed_pw = hash_password(user.password)
     new_user = User(
-        username=user.username,
-        email=user.email,
+        username=username,
+        email=email,
         hashed_password=hashed_pw
     )
 
@@ -52,7 +64,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 # 🔐 Login user
 @router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email == user.email).first()
+    email = user.email.lower().strip()
+    db_user = db.query(User).filter(User.email == email).first()
 
     # ✅ Use cast() here to remove Pylance warning
     if not db_user or not verify_password(user.password, cast(str, db_user.hashed_password)):
