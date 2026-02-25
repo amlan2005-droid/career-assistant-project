@@ -1,0 +1,63 @@
+﻿ M career-assistant-frontend/src/Services/api.js
+ M career-assistant-frontend/src/pages/InterviewPrep.jsx
+ M career-assistant-frontend/src/pages/ResumeUpload.jsx
+ M career-assistant-frontend/src/pages/login.jsx
+ M "career_assistant frontend"
+ M career_assistant_backend/app/auth/auth_bearer.py
+ M career_assistant_backend/app/auth/auth_handler.py
+ M career_assistant_backend/app/auth/dependencies.py
+ M career_assistant_backend/app/main.py
+ M career_assistant_backend/app/models/interview_session.py
+ M career_assistant_backend/app/rag/db_v2/919dcb21-2085-4b40-8d6e-a384dc5ee77c/length.bin
+ M career_assistant_backend/app/routers/auth.py
+ M career_assistant_backend/app/routers/interview.py
+ M career_assistant_backend/app/services/gemini_client.py
+ M career_assistant_backend/app/services/interview_engine.py
+ M career_assistant_backend/app/services/interview_evaluator.py
+ M career_assistant_backend/app/services/interview_feedback_aggregator.py
+ M career_assistant_backend/app/services/reasoning_service.py
+ M career_assistant_backend/app/services/resume_analysis_service.py
+ M career_assistant_backend/app/services/resume_parser.py
+ M career_assistant_backend/app/utils/resume_text_extractor.py
+ M career_assistant_backend/debug_out.txt
+ M career_assistant_backend/debug_out_utf8.txt
+ D career_assistant_backend/list_models.py
+ M career_assistant_backend/requirements.txt
+ M career_assistant_backend/test_gemini_pdf.py
+?? TROUBLESHOOTING.md
+?? career_assistant_backend/app/routers/cheating.py
+?? career_assistant_backend/app/services/cheating_rules.py
+?? career_assistant_backend/app/services/cheating_state.py
+?? career_assistant_backend/app/services/cv_engine.py
+?? career_assistant_backend/debug_500.py
+?? career_assistant_backend/diag_available_models.py
+?? career_assistant_backend/diag_final.py
+?? career_assistant_backend/diag_full_output.txt
+?? career_assistant_backend/diag_full_output_v2.txt
+?? career_assistant_backend/diag_log.txt
+?? career_assistant_backend/diag_log_utf8.txt
+?? career_assistant_backend/diag_model.py
+?? career_assistant_backend/diag_model_minimal.py
+?? career_assistant_backend/diag_new_key.py
+?? career_assistant_backend/diag_new_key_prefix.py
+?? career_assistant_backend/diag_traceback.py
+?? career_assistant_backend/git_status.txt
+?? career_assistant_backend/git_status_utf8.txt
+?? career_assistant_backend/list_models_new_key.py
+?? career_assistant_backend/migrate_add_confidences.py
+?? career_assistant_backend/migrate_total_questions.py
+?? career_assistant_backend/server_debug_log.txt
+?? career_assistant_backend/test_analysis_diversity.py
+?? career_assistant_backend/test_cheating_rules.py
+?? career_assistant_backend/test_cv_engine.py
+?? career_assistant_backend/test_duplicate_username.py
+?? career_assistant_backend/test_email_casing.py
+?? career_assistant_backend/test_resume_fix.py
+?? career_assistant_backend/verify_adaptive_flow.py
+?? career_assistant_backend/verify_interview_flow.py
+?? career_assistant_backend/verify_question_number_fix.py
+?? career_assistant_backend/verify_state_tracking.py
+?? debug_interview_auth.py
+?? reproduce_issue.py
+?? verify_fix.py
+?? verify_question_number_fix.py

@@ -1,0 +1,172 @@
+python : C:\Users\DEL
+L\AppData\Local\Progr
+ams\Python\Python310\
+lib\site-packages\goo
+gle\api_core\_python_
+version_support.py:26
+6: FutureWarning: 
+You are using a 
+Python version 
+(3.10.10) which 
+Google will stop 
+supporting in new 
+releases of 
+google.api_core once 
+it reaches its end 
+of life 
+(2026-10-04). Please 
+upgrade to the 
+latest Python 
+version, or at least 
+Python 3.11, to 
+continue receiving 
+updates for 
+google.api_core past 
+that date.
+At line:1 char:1
++ python 
+diag_traceback.py > 
+diag_log.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (C:\User   
+ s\DELL\A...past     
+that date.:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+  warnings.warn(messa
+ge, FutureWarning)
+C:\Users\DELL\career_
+assistant_project\car
+eer_assistant_backend
+\app\services\gemini_
+client.py:5: 
+FutureWarning: 
+
+All support for the `
+google.generativeai` 
+package has ended. 
+It will no longer be 
+receiving 
+updates or bug 
+fixes. Please switch 
+to the 
+`google.genai` 
+package as soon as 
+possible.
+See README for more 
+details:
+
+https://github.com/go
+ogle-gemini/deprecate
+d-generative-ai-pytho
+n/blob/main/README.md
+
+  import 
+google.generativeai 
+as genai
+Traceback (most 
+recent call last):
+  File "C:\Users\DELL
+\career_assistant_pro
+ject\career_assistant
+_backend\app\services
+\gemini_client.py", 
+line 28, in <module>
+    print(f"\u2705 
+Gemini API (Legacy 
+SDK) initialized 
+successfully with 
+key: {key_censored}")
+  File "C:\Users\DELL
+\AppData\Local\Progra
+ms\Python\Python310\l
+ib\encodings\cp1252.p
+y", line 19, in 
+encode
+    return codecs.cha
+rmap_encode(input,sel
+f.errors,encoding_tab
+le)[0]
+UnicodeEncodeError: 
+'charmap' codec 
+can't encode 
+character '\u2705' 
+in position 0: 
+character maps to 
+<undefined>
+
+During handling of 
+the above exception, 
+another exception 
+occurred:
+
+Traceback (most 
+recent call last):
+  File "C:\Users\DELL
+\career_assistant_pro
+ject\career_assistant
+_backend\diag_traceba
+ck.py", line 10, in 
+<module>
+    from app.main 
+import app
+  File "C:\Users\DELL
+\career_assistant_pro
+ject\career_assistant
+_backend\app\main.py"
+, line 5, in <module>
+    from app.routers 
+import (
+  File "C:\Users\DELL
+\career_assistant_pro
+ject\career_assistant
+_backend\app\routers\
+interview.py", line 
+14, in <module>
+    from app.services
+.interview_engine 
+import generate_resum
+e_aware_questions
+  File "C:\Users\DELL
+\career_assistant_pro
+ject\career_assistant
+_backend\app\services
+\interview_engine.py"
+, line 5, in <module>
+    from app.services
+.gemini_client 
+import ask_gemini
+  File "C:\Users\DELL
+\career_assistant_pro
+ject\career_assistant
+_backend\app\services
+\gemini_client.py", 
+line 30, in <module>
+    print(f"\u274c 
+Failed to initialize 
+Gemini Client: {e}")
+  File "C:\Users\DELL
+\AppData\Local\Progra
+ms\Python\Python310\l
+ib\encodings\cp1252.p
+y", line 19, in 
+encode
+    return codecs.cha
+rmap_encode(input,sel
+f.errors,encoding_tab
+le)[0]
+UnicodeEncodeError: 
+'charmap' codec 
+can't encode 
+character '\u274c' 
+in position 0: 
+character maps to 
+<undefined>

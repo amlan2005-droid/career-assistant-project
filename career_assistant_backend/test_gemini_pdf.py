@@ -1,4 +1,5 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 import time
 from dotenv import load_dotenv
@@ -6,33 +7,49 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def extract_text_gemini(file_path):
-    key = os.getenv("GOOGLE_API_KEY")
+    key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     print(f"API Key found: {bool(key)}")
     if key:
         print(f"Key starts with: {key[:5]}...")
-    genai.configure(api_key=key)
+    
+    client = genai.Client(api_key=key)
     
     print(f"Uploading {file_path} to Gemini...")
-    sample_file = genai.upload_file(path=file_path, display_name="Resume")
+    # New SDK handles file upload differently if using the files API
+    # But for a simple script, we can pass the path directly or use the Files API
+    with open(file_path, "rb") as f:
+        # Note: The new SDK supports direct path in some contexts, 
+        # but here's the formal way using the files API if desired.
+        uploaded_file = client.files.upload(path=file_path, config=types.UploadFileConfig(display_name="Resume"))
     
-    while sample_file.state.name == "PROCESSING":
-        print(".", end="")
+    print(f"File uploaded as: {uploaded_file.name}")
+    
+    # Wait for processing
+    while True:
+        uploaded_file = client.files.get(name=uploaded_file.name)
+        if uploaded_file.state == "ACTIVE":
+            break
+        elif uploaded_file.state == "FAILED":
+            raise Exception("Gemini file processing failed")
+        print(".", end="", flush=True)
         time.sleep(2)
-        sample_file = genai.get_file(sample_file.name)
     
-    if sample_file.state.name == "FAILED":
-        raise Exception("Gemini file processing failed")
-
     print("\nFile processed. Prompting Gemini for text...")
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    response = model.generate_content([
-        sample_file,
-        "Extract all the text from this resume exactly as it appears. "
-        "Maintain the layout structure as much as possible."
-    ])
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=[
+            uploaded_file,
+            "Extract all the text from this resume exactly as it appears. "
+            "Maintain the layout structure as much as possible."
+        ]
+    )
     
-    # Cleanup
-    genai.delete_file(sample_file.name)
+    # Cleanup (Optional, but good practice)
+    try:
+        client.files.delete(name=uploaded_file.name)
+        print("File cleaned up from Gemini server.")
+    except Exception as e:
+        print(f"Cleanup failed: {e}")
     
     return response.text
 
